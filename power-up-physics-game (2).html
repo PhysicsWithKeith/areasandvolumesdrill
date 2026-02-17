@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Power Up! – Unit Prefix Powers</title>
+<style>
+/* ===========================
+   ROOT & RESET
+=========================== */
+* { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --bg:      #08081e;
+  --teal:    #4ecdc4;
+  --yellow:  #ffe66d;
+  --coral:   #ff6b6b;
+  --purple:  #c084fc;
+  --green:   #86efac;
+  --glass:   rgba(255,255,255,0.06);
+  --border:  rgba(255,255,255,0.13);
+  --white:   #eef2ff;
+  --font:    'Trebuchet MS','Lucida Grande',sans-serif;
+}
+
+body {
+  background: var(--bg);
+  color: var(--white);
+  font-family: var(--font);
+  height: 100vh;
+  overflow: hidden;        /* no scrolling ever */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* ===========================
+   ANIMATED BACKGROUND
+=========================== */
+#bg-stars { position:fixed; inset:0; z-index:0; pointer-events:none; }
+.star {
+  position: absolute;
+  background: white;
+  border-radius: 50%;
+  animation: twinkle ease-in-out infinite alternate;
+}
+@keyframes twinkle {
+  from { opacity:.15; transform:scale(1);   }
+  to   { opacity:.9;  transform:scale(1.5); }
+}
+
+#bg-floaters { position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+.floater {
+  position: absolute;
+  font-size: 1.4rem;
+  opacity: 0.07;
+  color: var(--teal);
+  animation: drift linear infinite;
+}
+@keyframes drift {
+  from { transform: translateY(105vh) rotate(0deg); }
+  to   { transform: translateY(-10vh) rotate(270deg); }
+}
+
+/* ===========================
+   SCREENS
+=========================== */
+.screen {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 680px;
+  padding: 0 10px;
+  position: relative;
+  z-index: 10;
+}
+.screen.active { display:flex; }
+
+/* ===========================
+   GLASS CARD
+=========================== */
+.glass {
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 6px 28px rgba(0,0,0,0.35);
+  width: 100%;
+}
+
+/* ===========================
+   INTRO SCREEN
+=========================== */
+.game-title {
+  font-size: 2.6rem;
+  font-weight: 900;
+  letter-spacing: -1px;
+  background: linear-gradient(120deg, var(--yellow), var(--coral), var(--purple), var(--teal));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-align: center;
+  line-height: 1;
+}
+.subtitle {
+  text-align: center;
+  color: var(--teal);
+  font-size: .85rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-top: -2px;
+}
+
+.intro-body { display:flex; gap:8px; width:100%; }
+.intro-col  { flex:1; display:flex; flex-direction:column; gap:8px; }
+
+.rules-card { padding:12px 16px; }
+.rules-card h2 { color:var(--yellow); font-size:.95rem; margin-bottom:7px; }
+.rule { display:flex; align-items:flex-start; gap:6px; font-size:.78rem; line-height:1.35; margin-bottom:4px; }
+.rule-icon { flex-shrink:0; }
+
+.prefix-card { padding:10px 14px; }
+.prefix-card h2 { color:var(--teal); font-size:.95rem; margin-bottom:6px; }
+table.pt { width:100%; border-collapse:collapse; font-size:.76rem; }
+table.pt th { color:rgba(255,255,255,.5); font-weight:600; padding:2px 4px; text-align:left; border-bottom:1px solid var(--border); }
+table.pt td { padding:2px 4px; color:rgba(255,255,255,.8); }
+table.pt tr:nth-child(even) td { background:rgba(255,255,255,.03); }
+
+.example-card { padding:10px 16px; border-left:3px solid var(--coral); }
+.example-card h3 { color:var(--coral); font-size:.85rem; margin-bottom:4px; }
+.ex-formula { font-size:1.3rem; font-weight:900; color:var(--yellow); text-align:center; margin:3px 0; }
+.ex-steps { font-size:.75rem; color:rgba(255,255,255,.65); text-align:center; line-height:1.5; }
+
+.btn-start {
+  width:220px;
+  padding:12px 0;
+  background: linear-gradient(135deg, var(--coral), var(--purple));
+  border: none; border-radius:50px;
+  color:white; font-family:var(--font);
+  font-size:1.15rem; font-weight:900;
+  cursor:pointer; letter-spacing:1px;
+  box-shadow:0 4px 20px rgba(255,107,107,.4);
+  transition:transform .15s, box-shadow .15s;
+}
+.btn-start:hover { transform:scale(1.05); box-shadow:0 6px 30px rgba(255,107,107,.55); }
+
+/* ===========================
+   GAME SCREEN
+=========================== */
+
+/* Top bar */
+.top-bar {
+  display:flex; align-items:center; gap:8px;
+  padding:7px 14px;
+}
+.top-title {
+  flex:1; font-size:1rem; font-weight:900;
+  background:linear-gradient(90deg,var(--yellow),var(--coral));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+}
+.pill {
+  border-radius:20px; padding:4px 12px;
+  font-size:.85rem; font-weight:700;
+  border:1px solid; white-space:nowrap;
+}
+.pill-score  { color:var(--yellow); border-color:var(--yellow); background:rgba(255,230,109,.1); }
+.pill-qnum   { color:var(--purple); border-color:var(--purple); background:rgba(192,132,252,.1); }
+.pill-timer  { color:var(--teal);   border-color:var(--teal);   background:rgba(78,205,196,.1);
+               min-width:62px; text-align:center; font-variant-numeric:tabular-nums; }
+.pill-timer.warn { color:var(--coral); border-color:var(--coral); background:rgba(255,107,107,.15); }
+
+.btn-end {
+  background:rgba(255,107,107,.15); border:1px solid var(--coral);
+  border-radius:20px; padding:4px 10px;
+  color:var(--coral); font-size:.78rem; font-family:var(--font);
+  cursor:pointer; transition:background .2s;
+}
+.btn-end:hover { background:rgba(255,107,107,.3); }
+
+/* Question card */
+.question-card { padding:12px 22px; text-align:center; }
+.q-label { font-size:.7rem; text-transform:uppercase; letter-spacing:2px; color:rgba(255,255,255,.35); margin-bottom:3px; }
+.q-text  { font-size:2rem; font-weight:900; line-height:1.1; }
+
+/* Answer card */
+.answer-card { padding:10px 18px; display:flex; flex-direction:column; gap:7px; }
+.answer-row  { display:flex; align-items:center; gap:8px; }
+
+.unit-badge {
+  background:rgba(78,205,196,.18); border:1px solid var(--teal);
+  border-radius:10px; padding:5px 10px;
+  font-size:.95rem; font-weight:700; color:var(--teal);
+  white-space:nowrap;
+}
+.answer-input {
+  flex:1; background:rgba(255,255,255,.09); border:2px solid var(--border);
+  border-radius:10px; padding:7px 12px; color:white;
+  font-size:.97rem; font-family:var(--font); outline:none;
+  transition:border-color .2s, background .2s;
+}
+.answer-input:focus   { border-color:var(--teal); }
+.answer-input.correct { border-color:var(--green);  background:rgba(134,239,172,.12); }
+.answer-input.wrong   { border-color:var(--coral);  background:rgba(255,107,107,.12); }
+
+.btn-submit {
+  padding:7px 18px;
+  background:linear-gradient(135deg,var(--teal),#2dd4bf);
+  border:none; border-radius:10px;
+  color:#051a1a; font-weight:900; font-size:.9rem; font-family:var(--font);
+  cursor:pointer; transition:transform .1s, opacity .2s; white-space:nowrap;
+}
+.btn-submit:hover   { transform:scale(1.05); }
+.btn-submit:disabled{ opacity:.35; cursor:not-allowed; transform:none; }
+
+/* Attempts row */
+.attempts-row { display:flex; align-items:center; gap:5px; font-size:.78rem; }
+.a-dot {
+  width:10px; height:10px; border-radius:50%;
+  background:var(--yellow); transition:background .3s;
+}
+.a-dot.used { background:var(--coral); }
+#att-label  { color:rgba(255,255,255,.55); margin-left:4px; }
+
+/* ===========================
+   HINTS — FIXED HEIGHT
+=========================== */
+.hints-zone {
+  width:100%; height:58px;   /* FIXED — nothing shifts when hints appear */
+  display:flex; align-items:center;
+  padding:0 2px;
+}
+.hint-box {
+  width:100%; height:100%;
+  display:flex; align-items:center;
+  padding:0 14px;
+  border-radius:14px;
+  font-size:.8rem; line-height:1.35; color:var(--yellow);
+  background:rgba(255,230,109,.08); border:1px solid rgba(255,230,109,.18);
+  opacity:0; transition:opacity .4s;
+}
+.hint-box.show { opacity:1; }
+
+/* ===========================
+   ANSWER REVEAL
+=========================== */
+.reveal-panel {
+  display:none; gap:0;
+  border-radius:18px; overflow:hidden;
+}
+.reveal-panel.show { display:flex; }
+
+.reveal-text {
+  flex:1; padding:10px 18px;
+  border-right:1px solid var(--border);
+}
+.rev-label { font-size:.68rem; text-transform:uppercase; letter-spacing:2px; color:rgba(255,255,255,.35); margin-bottom:2px; }
+.rev-ans   { font-size:1.35rem; font-weight:900; color:var(--green); }
+.rev-steps { font-size:.75rem; color:rgba(255,255,255,.58); margin-top:4px; line-height:1.55; }
+
+.reveal-canvas { padding:8px 12px; display:flex; align-items:center; justify-content:center; }
+canvas#isoC { border-radius:10px; background:rgba(255,255,255,.04); }
+
+/* Next Question button */
+.btn-next {
+  display:none;
+  padding:9px 36px;
+  background:linear-gradient(135deg,var(--purple),var(--coral));
+  border:none; border-radius:50px;
+  color:white; font-family:var(--font); font-weight:900; font-size:.95rem;
+  cursor:pointer; letter-spacing:1px;
+  box-shadow:0 4px 18px rgba(192,132,252,.3);
+  transition:transform .15s;
+  margin-bottom:2px;
+}
+.btn-next.show  { display:block; }
+.btn-next:hover { transform:scale(1.05); }
+
+/* ===========================
+   END SCREEN
+=========================== */
+.end-score {
+  font-size:4rem; font-weight:900; line-height:1;
+  background:linear-gradient(135deg,var(--yellow),var(--coral));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+}
+.end-msg { font-size:1rem; color:var(--yellow); font-weight:700; text-align:center; }
+.stats-row { display:flex; gap:20px; padding:14px 28px; }
+.stat { text-align:center; }
+.stat-val { font-size:1.8rem; font-weight:900; color:var(--teal); }
+.stat-lbl { font-size:.7rem; text-transform:uppercase; letter-spacing:1px; color:rgba(255,255,255,.45); }
+.insight-card { padding:12px 18px; font-size:.82rem; color:rgba(255,255,255,.7); max-width:440px; line-height:1.5; }
+.btn-again {
+  padding:12px 54px;
+  background:linear-gradient(135deg,var(--teal),var(--purple));
+  border:none; border-radius:50px;
+  color:white; font-family:var(--font);
+  font-size:1.1rem; font-weight:900;
+  cursor:pointer; letter-spacing:1px;
+  box-shadow:0 4px 22px rgba(78,205,196,.35);
+  transition:transform .15s;
+}
+.btn-again:hover { transform:scale(1.05); }
+
+/* ===========================
+   ANIMATIONS
+=========================== */
+@keyframes shake {
+  0%,100%{ transform:translateX(0); }
+  25%     { transform:translateX(-6px); }
+  75%     { transform:translateX(6px); }
+}
+@keyframes glow {
+  0%   { box-shadow:0 0 0 0 rgba(134,239,172,.7); }
+  100% { box-shadow:0 0 0 18px rgba(134,239,172,0); }
+}
+.shake { animation:shake .35s ease-out; }
+.glow  { animation:glow .6s ease-out; }
+</style>
+</head>
+<body>
+
+<!-- ───────────────── BACKGROUND ───────────────── -->
+<div id="bg-stars"></div>
+<div id="bg-floaters"></div>
+
+<!-- ═══════════════════════════════════════════════
+     INTRO SCREEN
+═══════════════════════════════════════════════ -->
+<div class="screen active" id="scr-intro">
+  <h1 class="game-title">⚡ POWER UP! ⚡</h1>
+  <p class="subtitle">Unit Prefix Superpowers — Physics Revision Game</p>
+
+  <div class="intro-body">
+    <!-- Left column: rules + example -->
+    <div class="intro-col">
+      <div class="glass rules-card">
+        <h2>📋 How to Play</h2>
+        <div class="rule"><span class="rule-icon">📐</span><span>You'll be given a length with a SI prefix. Square or cube it — giving your answer in m² or m³.</span></div>
+        <div class="rule"><span class="rule-icon">⏱️</span><span>5 minutes on the clock. Answer as many as you can!</span></div>
+        <div class="rule"><span class="rule-icon">🎯</span><span>3 attempts per question — <b>3 pts</b> first try, <b>2 pts</b> second, <b>1 pt</b> third.</span></div>
+        <div class="rule"><span class="rule-icon">💡</span><span>Hints appear after each wrong answer to help you.</span></div>
+        <div class="rule"><span class="rule-icon">⌨️</span><span>Type your value and press <b>Enter</b> (or click Submit). The unit is shown for you.</span></div>
+        <div class="rule"><span class="rule-icon">✅</span><span>Answers checked to 2 significant figures — near misses accepted!</span></div>
+      </div>
+      <div class="glass example-card">
+        <h3>✨ Worked Example</h3>
+        <div class="ex-formula">(2 cm)² = ?</div>
+        <div class="ex-steps">
+          Step 1: 2 cm = 2 × 10<sup>−2</sup> m<br>
+          Step 2: (2 × 10<sup>−2</sup>)<sup>2</sup> = 2<sup>2</sup> × (10<sup>−2</sup>)<sup>2</sup><br>
+          Step 3: = 4 × 10<sup>−4</sup> m² ✓
+        </div>
+      </div>
+    </div>
+
+    <!-- Right column: prefix table -->
+    <div class="intro-col">
+      <div class="glass prefix-card" style="flex:1;">
+        <h2>🔤 SI Prefixes Used</h2>
+        <table class="pt">
+          <tr><th>Prefix</th><th>Symbol</th><th>Value</th></tr>
+          <tr><td>femto</td><td>f</td><td>× 10<sup>−15</sup></td></tr>
+          <tr><td>pico</td> <td>p</td><td>× 10<sup>−12</sup></td></tr>
+          <tr><td>nano</td> <td>n</td><td>× 10<sup>−9</sup></td></tr>
+          <tr><td>micro</td><td>μ</td><td>× 10<sup>−6</sup></td></tr>
+          <tr><td>milli</td><td>m</td><td>× 10<sup>−3</sup></td></tr>
+          <tr><td>centi</td><td>c</td><td>× 10<sup>−2</sup></td></tr>
+          <tr><td>kilo</td> <td>k</td><td>× 10<sup>3</sup></td></tr>
+          <tr><td>mega</td> <td>M</td><td>× 10<sup>6</sup></td></tr>
+          <tr><td>giga</td> <td>G</td><td>× 10<sup>9</sup></td></tr>
+          <tr><td>tera</td> <td>T</td><td>× 10<sup>12</sup></td></tr>
+        </table>
+        <div style="margin-top:8px; font-size:.75rem; color:rgba(255,255,255,.45); line-height:1.4;">
+          ⚠️ Remember: the prefix gets raised to the power too!<br>
+          (3 mm)² ≠ 9 mm² — you must convert to metres first.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn-start" onclick="startGame()">🚀 Start Game!</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     GAME SCREEN
+═══════════════════════════════════════════════ -->
+<div class="screen" id="scr-game">
+
+  <!-- ── Top bar ── -->
+  <div class="glass top-bar">
+    <span class="top-title">⚡ POWER UP!</span>
+    <span class="pill pill-qnum">Q <span id="qNum">1</span></span>
+    <span class="pill pill-score">Score: <span id="scoreVal">0</span></span>
+    <span class="pill pill-timer" id="timerEl">5:00</span>
+    <button class="btn-end" onclick="endGame()">■ End Early</button>
+  </div>
+
+  <!-- ── Question ── -->
+  <div class="glass question-card">
+    <div class="q-label">Calculate…</div>
+    <div class="q-text" id="questionText">Loading…</div>
+  </div>
+
+  <!-- ── Answer input ── -->
+  <div class="glass answer-card">
+    <div class="answer-row">
+      <div class="unit-badge" id="unitBadge">m²</div>
+      <input class="answer-input" id="ansInput"
+             type="text" autocomplete="off" spellcheck="false"
+             placeholder="e.g. 4e-4  or  0.0004" />
+      <button class="btn-submit" id="btnSubmit" onclick="submitAnswer()">Submit</button>
+    </div>
+    <!-- Attempts indicator -->
+    <div class="attempts-row">
+      <span style="font-size:.75rem;color:rgba(255,255,255,.4);">Attempts:</span>
+      <div class="a-dot" id="ad0"></div>
+      <div class="a-dot" id="ad1"></div>
+      <div class="a-dot" id="ad2"></div>
+      <span id="att-label"></span>
+    </div>
+  </div>
+
+  <!-- ── Hints zone — FIXED HEIGHT so layout never shifts ── -->
+  <div class="hints-zone">
+    <div class="hint-box glass" id="hintBox"></div>
+  </div>
+
+  <!-- ── Correct-answer reveal + isometric diagram ── -->
+  <div class="glass reveal-panel" id="revealPanel">
+    <div class="reveal-text">
+      <div class="rev-label">Correct Answer</div>
+      <div class="rev-ans"  id="revAns"></div>
+      <div class="rev-steps" id="revSteps"></div>
+    </div>
+    <div class="reveal-canvas">
+      <canvas id="isoC" width="145" height="118"></canvas>
+    </div>
+  </div>
+
+  <!-- ── Next Question ── -->
+  <button class="btn-next" id="btnNext" onclick="nextQuestion()">Next Question →</button>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     END SCREEN
+═══════════════════════════════════════════════ -->
+<div class="screen" id="scr-end">
+  <h1 class="game-title">🏁 GAME OVER! 🏁</h1>
+  <div class="end-score" id="endScore">0</div>
+  <div class="end-msg"   id="endMsg">Well done!</div>
+  <div class="glass stats-row">
+    <div class="stat"><div class="stat-val" id="stQ">0</div><div class="stat-lbl">Questions</div></div>
+    <div class="stat"><div class="stat-val" id="stC">0</div><div class="stat-lbl">Correct</div></div>
+    <div class="stat"><div class="stat-val" id="stA">0%</div><div class="stat-lbl">Accuracy</div></div>
+    <div class="stat"><div class="stat-val" id="stP">0</div><div class="stat-lbl">Best pts/Q</div></div>
+  </div>
+  <div class="glass insight-card">
+    <b style="color:var(--yellow);">📚 Key Insight:</b> When raising a prefixed length to a power,
+    <em>both</em> the number <em>and</em> the prefix exponent are raised:<br>
+    <span style="color:var(--teal);">(a × 10<sup>n</sup>)<sup>p</sup> = a<sup>p</sup> × 10<sup>np</sup></span><br>
+    e.g. (3 cm)² = (3 × 10<sup>−2</sup>)<sup>2</sup> = 9 × 10<sup>−4</sup> m²
+  </div>
+  <button class="btn-again" onclick="restartGame()">🔄 Play Again!</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════════════ -->
+<script>
+"use strict";
+
+// ============================================================
+//  BACKGROUND DECORATION
+// ============================================================
+
+// Stars
+(function() {
+  const c = document.getElementById('bg-stars');
+  for (let i = 0; i < 55; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const sz = Math.random() * 2.2 + 0.4;
+    s.style.cssText = `width:${sz}px;height:${sz}px;left:${Math.random()*100}%;
+      top:${Math.random()*100}%;animation-delay:${Math.random()*4}s;
+      animation-duration:${1.5+Math.random()*3}s;`;
+    c.appendChild(s);
+  }
+})();
+
+// Floating physics symbols
+(function() {
+  const syms = ['m²','km','μm','nm','cm³','10⁻⁹','μ','×10','SI','n','k','²','³','m³'];
+  const c    = document.getElementById('bg-floaters');
+  for (let i = 0; i < 14; i++) {
+    const f = document.createElement('div');
+    f.className = 'floater';
+    f.textContent = syms[i % syms.length];
+    f.style.cssText = `left:${Math.random()*100}%;
+      animation-duration:${12+Math.random()*18}s;
+      animation-delay:${Math.random()*-25}s;`;
+    c.appendChild(f);
+  }
+})();
+
+// ============================================================
+//  PHYSICS DATA
+// ============================================================
+
+/**
+ * SI prefixes used in questions.
+ * `exp` is the exponent: prefix value = 10^exp
+ */
+const PREFIXES = [
+  { name:'femto', sym:'f', exp:-15 },
+  { name:'pico',  sym:'p', exp:-12 },
+  { name:'nano',  sym:'n', exp:-9  },
+  { name:'micro', sym:'μ', exp:-6  },
+  { name:'milli', sym:'m', exp:-3  },
+  { name:'centi', sym:'c', exp:-2  },
+  { name:'kilo',  sym:'k', exp: 3  },
+  { name:'mega',  sym:'M', exp: 6  },
+  { name:'giga',  sym:'G', exp: 9  },
+  { name:'tera',  sym:'T', exp: 12 },
+];
+
+// Whole-number coefficients (keeps arithmetic clean)
+const COEFFICIENTS = [2, 3, 4, 5, 6, 7, 8, 9];
+
+// Only square (power=2) and cube (power=3)
+const POWERS = [2, 3];
+
+// Points awarded: index = (attempt - 1)
+const POINTS = [3, 2, 1];
+
+// Game length in seconds
+const GAME_SECS = 300;
+
+// ============================================================
+//  GAME STATE
+// ============================================================
+let score        = 0;
+let qCount       = 0;   // questions attempted (completed)
+let qCorrect     = 0;   // questions answered correctly
+let bestPts      = 0;   // best points scored in a single question
+let timeLeft     = GAME_SECS;
+let timerID      = null;
+let active       = false; // is the game running?
+let curQ         = null;  // current question object
+let attempts     = 0;     // attempts used on current question (0–3)
+let wrongCount   = 0;     // wrong answers given so far this question
+let enterMode    = 'submit'; // 'submit' | 'next'
+
+// ============================================================
+//  QUESTION GENERATION
+// ============================================================
+
+/**
+ * Builds a question object.
+ * Physics: (coeff × 10^exp)^power = coeff^power × 10^(exp*power) m^power
+ *
+ * All arithmetic is done via exact integer exponents to avoid
+ * floating-point drift.  The true SI answer (m² or m³) is stored.
+ */
+function generateQuestion() {
+  const p  = PREFIXES[Math.floor(Math.random() * PREFIXES.length)];
+  const c  = COEFFICIENTS[Math.floor(Math.random() * COEFFICIENTS.length)];
+  const pw = POWERS[Math.floor(Math.random() * POWERS.length)];
+
+  // correctAnswer in SI (m² or m³):
+  //   (c × 10^p.exp)^pw  =  c^pw × 10^(p.exp * pw)
+  const coeffResult = Math.pow(c, pw);       // e.g. 3²=9
+  const expResult   = p.exp * pw;            // e.g. −2×2=−4
+  const siValue     = coeffResult * Math.pow(10, expResult); // e.g. 9e-4
+
+  return {
+    coeff:      c,
+    prefix:     p,
+    power:      pw,
+    siValue:    siValue,      // exact SI answer
+    coeffRes:   coeffResult,  // c^pw (integer or nice number)
+    expRes:     expResult,    // exact exponent in SI result
+    unit:       pw === 2 ? 'm²' : 'm³'
+  };
+}
+
+// ============================================================
+//  FORMATTING HELPERS
+// ============================================================
+
+/**
+ * Returns HTML for a number in scientific notation using <sup> tags.
+ * e.g.  9e-4  →  "9 × 10<sup>−4</sup>"
+ *       1e-18 →  "10<sup>−18</sup>"
+ *
+ * We display the exact answer, not rounded.
+ */
+function sciHTML(n) {
+  if (n === 0) return '0';
+  // Calculate exponent and coefficient
+  const exp   = Math.floor(Math.log10(Math.abs(n)));
+  let   coeff = n / Math.pow(10, exp);
+  // Round to 4 s.f. to suppress floating-point noise
+  coeff = Math.round(coeff * 1e4) / 1e4;
+
+  const expSign = exp < 0 ? '−' : '';
+  const expAbs  = Math.abs(exp);
+  const supStr  = `${expSign}${expAbs}`;
+
+  // Tidy coefficient: remove trailing .0
+  let cStr = coeff.toString();
+  if (cStr.includes('.') && cStr.endsWith('0')) {
+    cStr = parseFloat(cStr).toString();
+  }
+
+  if (exp === 0) return cStr;
+  if (parseFloat(cStr) === 1) return `10<sup>${supStr}</sup>`;
+  return `${cStr} × 10<sup>${supStr}</sup>`;
+}
+
+/**
+ * Plain-text scientific notation (for canvas labels).
+ * e.g. 9e-4 → "9×10⁻⁴"
+ */
+function sciText(n) {
+  if (n === 0) return '0';
+  const exp   = Math.floor(Math.log10(Math.abs(n)));
+  let   coeff = Math.round(n / Math.pow(10, exp) * 1e4) / 1e4;
+  const cStr  = parseFloat(coeff.toString()).toString();
+  const sups  = {'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','-':'⁻'};
+  const supStr = String(exp).split('').map(ch => sups[ch] || ch).join('');
+  if (exp === 0) return cStr;
+  if (parseFloat(cStr) === 1) return `10${supStr}`;
+  return `${cStr}×10${supStr}`;
+}
+
+/**
+ * Formats the question as HTML: e.g. "(3 cm)<sup>2</sup>"
+ */
+function qHTML(q) {
+  const sup = q.power === 2 ? '2' : '3';
+  return `${q.coeff} ${q.prefix.sym}m<sup>${sup}</sup>`;
+}
+
+// ============================================================
+//  ANSWER VALIDATION
+// ============================================================
+
+/**
+ * Parses a student's typed answer into a JS number.
+ * Accepts formats:
+ *   "4e-4"  "4E-4"  "9e12"  "4×10^-4"  "4*10^-4"
+ *   "4x10^-4"  "0.0004"  "4.0 × 10 ^ -4"
+ */
+function parseAnswer(raw) {
+  let s = raw.trim()
+    .replace(/\s/g, '')          // strip spaces
+    .replace(/[−–]/g, '-')       // Unicode minus → ASCII
+    .replace(/×/g, '*')          // × → *
+    .replace(/\^/g, '^');        // already fine
+
+  // Handle "4*10^-4" or "4x10^-4" → convert to JS exponential
+  s = s.replace(/\*10\^(-?\d+)/i, 'e$1');
+  s = s.replace(/x10\^(-?\d+)/i,  'e$1');
+  // Handle "10^-4" (no leading coeff)
+  s = s.replace(/^10\^(-?\d+)$/i, '1e$1');
+
+  return parseFloat(s);
+}
+
+/**
+ * Converts a number to its "2 significant figure integer" form
+ * in the range [10, 99].
+ * e.g. 4.0e-4 → 40,  9.5e-4 → 95,  5.12e-7 → 51
+ *
+ * Returns NaN if the number is 0 or non-finite.
+ */
+function to2SFInt(n) {
+  if (!isFinite(n) || n === 0) return NaN;
+  const mag    = Math.floor(Math.log10(Math.abs(n)));
+  const factor = Math.pow(10, mag - 1);
+  return Math.round(n / factor);   // gives a 2-digit integer
+}
+
+/**
+ * Checks whether the student's answer is acceptable.
+ *
+ * Rules (per the specification):
+ *   1.  Both answers rounded to 2 s.f. must have the same order of magnitude.
+ *   2.  The 2-digit integer representations must differ by ≤ 1.
+ *   3.  Signs must match.
+ */
+function isCorrect(studentVal, correct) {
+  if (isNaN(studentVal) || !isFinite(studentVal)) return false;
+  if (Math.sign(studentVal) !== Math.sign(correct))  return false;
+
+  // Exponents (powers of 10) must be the same after rounding to 2 SF
+  const sMag = Math.floor(Math.log10(Math.abs(studentVal)));
+  const cMag = Math.floor(Math.log10(Math.abs(correct)));
+  if (sMag !== cMag) return false;
+
+  // Compare 2-digit SF integers (allow ±1 tolerance on the second digit)
+  const sInt = to2SFInt(studentVal);
+  const cInt = to2SFInt(correct);
+  return Math.abs(sInt - cInt) <= 1;
+}
+
+// ============================================================
+//  HINTS
+// ============================================================
+
+/**
+ * Returns an HTML string for a hint.
+ * wrongCount: number of wrong answers given so far (1 or 2).
+ */
+function getHint(q, wrongCount) {
+  const c  = q.coeff, p = q.prefix, pw = q.power;
+  const e  = p.exp;   // e.g. −2 for centi
+
+  if (wrongCount === 1) {
+    // Hint 1: remind them to convert and expand the power
+    const pwWord  = pw === 2 ? 'square' : 'cube';
+    const pwSym   = pw === 2 ? '²'      : '³';
+    const eSign   = e < 0 ? '−' : '';
+    const eAbs    = Math.abs(e);
+    return `💡 <b>Hint 1:</b> Convert first: ${c} ${p.sym}m = ${c} × 10<sup>${eSign}${eAbs}</sup> m.
+      Then ${pwWord} <em>each part separately</em>:
+      (${c} × 10<sup>${eSign}${eAbs}</sup>)<sup>${pw}</sup> = ${c}<sup>${pw}</sup> × (10<sup>${eSign}${eAbs}</sup>)<sup>${pw}</sup>.`;
+  }
+
+  if (wrongCount >= 2) {
+    // Hint 2: show the actual numbers
+    const eSign   = e < 0 ? '−' : '';
+    const eAbs    = Math.abs(e);
+    const cRes    = q.coeffRes;      // c^pw (integer)
+    const expRes  = q.expRes;        // e * pw (integer exponent)
+    const expSign = expRes < 0 ? '−' : '';
+    const expAbs  = Math.abs(expRes);
+    return `💡 <b>Hint 2:</b> ${c}<sup>${pw}</sup> = ${cRes} &nbsp;and&nbsp;
+      (10<sup>${eSign}${eAbs}</sup>)<sup>${pw}</sup> = 10<sup>${expSign}${expAbs}</sup>.
+      So the answer is ${cRes} × 10<sup>${expSign}${expAbs}</sup> ${q.unit}
+      = ${sciHTML(q.siValue)} ${q.unit}.`;
+  }
+  return '';
+}
+
+// ============================================================
+//  ISOMETRIC DIAGRAM
+// ============================================================
+
+/**
+ * Draws an isometric square (for power=2) or cube (for power=3) on
+ * the given canvas.  Labels each visible edge with the original
+ * length so students can see why the prefix is raised to the power.
+ *
+ * Colour palette:
+ *   square → teal (#4ecdc4)
+ *   cube   → purple (#c084fc) with three face shades
+ */
+function drawIso(canvas, q) {
+  const ctx  = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const label = `${q.coeff}${q.prefix.sym}m`;   // e.g. "3cm"
+  ctx.textBaseline = 'middle';
+  ctx.font = 'bold 9px Trebuchet MS,sans-serif';
+
+  if (q.power === 2) {
+    // ── ISOMETRIC SQUARE (top-face rhombus) ──────────────────
+    // Centre of rhombus
+    const cx = W / 2, cy = H / 2 + 6;
+    const ax = 52, ay = 22;   // half-axes of the rhombus
+
+    // Four corners
+    const top  = { x: cx,      y: cy - ay*2 };
+    const rgt  = { x: cx + ax, y: cy };
+    const bot  = { x: cx,      y: cy + ay*2 };
+    const lft  = { x: cx - ax, y: cy };
+
+    // Gradient fill
+    const grad = ctx.createLinearGradient(lft.x, cy, rgt.x, cy);
+    grad.addColorStop(0, 'rgba(78,205,196,0.55)');
+    grad.addColorStop(1, 'rgba(78,205,196,0.20)');
+
+    ctx.beginPath();
+    ctx.moveTo(top.x, top.y);
+    ctx.lineTo(rgt.x, rgt.y);
+    ctx.lineTo(bot.x, bot.y);
+    ctx.lineTo(lft.x, lft.y);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(78,205,196,0.9)';
+    ctx.lineWidth = 1.8;
+    ctx.stroke();
+
+    // Edge labels (top-left and top-right edges)
+    ctx.fillStyle = '#ffe66d';
+    ctx.textAlign = 'center';
+    ctx.fillText(label, (top.x + lft.x)/2 - 16, (top.y + lft.y)/2 - 3);
+    ctx.fillText(label, (top.x + rgt.x)/2 + 16, (top.y + rgt.y)/2 - 3);
+
+    // Area value in the centre
+    ctx.fillStyle = 'rgba(255,255,255,0.75)';
+    ctx.font = 'bold 8px Trebuchet MS,sans-serif';
+    ctx.fillText(sciText(q.siValue) + ' m²', cx, cy + 2);
+
+  } else {
+    // ── ISOMETRIC CUBE ────────────────────────────────────────
+    // Isometric unit vectors (pixel lengths):
+    //   right-forward:  (+sx, +sh)
+    //   left-forward:   (-sx, +sh)
+    //   up:             ( 0, -sv)
+    const cx = W/2, cy = H/2 + 4;
+    const sx = 42, sh = 24, sv = 48;
+
+    // 8 corners of the cube — only 7 visible
+    const TOP    = { x: cx,      y: cy - sv };            // apex
+    const TRL    = { x: cx + sx, y: cy - sv + sh };       // top-right-left
+    const TLR    = { x: cx - sx, y: cy - sv + sh };       // top-left-right
+    const MID    = { x: cx,      y: cy };                  // shared middle corner
+    const BRL    = { x: cx + sx, y: cy + sh };             // bottom-right
+    const BLL    = { x: cx - sx, y: cy + sh };             // bottom-left
+    const BOT    = { x: cx,      y: cy + 2*sh };           // bottom-centre
+
+    // Helper: filled polygon
+    function poly(pts, fill, stroke) {
+      ctx.beginPath();
+      ctx.moveTo(pts[0].x, pts[0].y);
+      pts.slice(1).forEach(p => ctx.lineTo(p.x, p.y));
+      ctx.closePath();
+      ctx.fillStyle   = fill;
+      ctx.fill();
+      ctx.strokeStyle = stroke;
+      ctx.lineWidth   = 1.5;
+      ctx.stroke();
+    }
+
+    // Top face (lightest)
+    poly([TOP, TRL, MID, TLR], 'rgba(192,132,252,0.70)', 'rgba(192,132,252,1)');
+    // Right face (medium)
+    poly([TRL, BRL, BOT, MID], 'rgba(192,132,252,0.40)', 'rgba(192,132,252,1)');
+    // Left face (darkest)
+    poly([TLR, MID, BOT, BLL], 'rgba(192,132,252,0.22)', 'rgba(192,132,252,1)');
+
+    // Edge labels on each visible face edge
+    ctx.fillStyle = '#ffe66d';
+    ctx.font      = 'bold 8.5px Trebuchet MS,sans-serif';
+    ctx.textAlign = 'center';
+    // Top face: front-right edge
+    ctx.fillText(label, (TOP.x + TRL.x)/2 + 12, (TOP.y + TRL.y)/2 - 5);
+    // Right face: top-right vertical edge
+    ctx.fillText(label, TRL.x + 14, (TRL.y + BRL.y)/2);
+    // Left face: bottom edge
+    ctx.fillText(label, (BLL.x + BOT.x)/2, BOT.y + 10);
+
+    // Volume label in lower-right area
+    ctx.fillStyle = 'rgba(255,255,255,0.75)';
+    ctx.font      = 'bold 7.5px Trebuchet MS,sans-serif';
+    ctx.fillText(sciText(q.siValue) + ' m³', cx + sx*0.6, cy + sh*1.5);
+  }
+}
+
+// ============================================================
+//  TIMER
+// ============================================================
+
+/** Formats integer seconds as "M:SS" */
+function fmtTime(s) {
+  return `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`;
+}
+
+function startTimer() {
+  timeLeft = GAME_SECS;
+  updateTimer();
+  timerID = setInterval(() => {
+    timeLeft--;
+    updateTimer();
+    if (timeLeft <= 0) endGame();
+  }, 1000);
+}
+
+function updateTimer() {
+  const el = document.getElementById('timerEl');
+  el.textContent = fmtTime(timeLeft);
+  el.classList.toggle('warn', timeLeft < 60);
+}
+
+// ============================================================
+//  SCREEN MANAGEMENT
+// ============================================================
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ============================================================
+//  GAME FLOW
+// ============================================================
+
+/** Resets all state and starts a fresh game */
+function startGame() {
+  score    = 0;
+  qCount   = 0;
+  qCorrect = 0;
+  bestPts  = 0;
+  active   = true;
+  showScreen('scr-game');
+  startTimer();
+  nextQuestion();
+}
+
+/** Called from end screen — return to intro */
+function restartGame() { showScreen('scr-intro'); }
+
+/** Load a new question and reset all UI elements */
+function nextQuestion() {
+  curQ      = generateQuestion();
+  attempts  = 0;
+  wrongCount = 0;
+  enterMode = 'submit';
+
+  // Increment display counter (questions presented, not completed)
+  document.getElementById('qNum').textContent = qCount + 1;
+
+  // Question text
+  document.getElementById('questionText').innerHTML = qHTML(curQ);
+
+  // Unit badge
+  document.getElementById('unitBadge').textContent = curQ.unit;
+
+  // Reset input
+  const inp = document.getElementById('ansInput');
+  inp.value = '';
+  inp.className = 'answer-input';
+  inp.disabled  = false;
+  setTimeout(() => inp.focus(), 30);
+
+  // Reset submit button
+  const btn = document.getElementById('btnSubmit');
+  btn.disabled = false;
+  btn.textContent = 'Submit';
+
+  // Reset attempt dots
+  refreshDots();
+  document.getElementById('att-label').textContent = '';
+
+  // Clear hint
+  const hb = document.getElementById('hintBox');
+  hb.innerHTML = '';
+  hb.classList.remove('show');
+
+  // Hide reveal and next button
+  document.getElementById('revealPanel').classList.remove('show');
+  document.getElementById('btnNext').classList.remove('show');
+
+  // Reset score display
+  document.getElementById('scoreVal').textContent = score;
+}
+
+/** Recolour the three attempt dots */
+function refreshDots() {
+  for (let i = 0; i < 3; i++) {
+    document.getElementById(`ad${i}`).classList.toggle('used', i < attempts);
+  }
+}
+
+// ============================================================
+//  ANSWER SUBMISSION
+// ============================================================
+
+function submitAnswer() {
+  if (!active) return;
+
+  const inp = document.getElementById('ansInput');
+  const raw = inp.value.trim();
+  if (!raw) return;
+
+  const sv   = parseAnswer(raw);
+  const pass = isCorrect(sv, curQ.siValue);
+  attempts++;
+  refreshDots();
+
+  if (pass) {
+    // ──── CORRECT ────────────────────────────────────────────
+    qCount++;
+    qCorrect++;
+    const pts = POINTS[attempts - 1] || 1;
+    score    += pts;
+    if (pts > bestPts) bestPts = pts;
+
+    inp.classList.add('correct');
+    inp.disabled = true;
+    document.getElementById('btnSubmit').disabled = true;
+    document.getElementById('att-label').textContent = `+${pts} pt${pts!==1?'s':''}!`;
+    document.getElementById('scoreVal').textContent  = score;
+
+    showReveal();
+    showNextBtn();
+    enterMode = 'next';
+
+    // Glow effect on question card
+    const qc = document.querySelector('.question-card');
+    qc.classList.add('glow');
+    setTimeout(() => qc.classList.remove('glow'), 700);
+
+  } else {
+    // ──── WRONG ──────────────────────────────────────────────
+    wrongCount++;
+
+    inp.classList.add('wrong');
+    inp.value = '';
+    const ac = document.querySelector('.answer-card');
+    ac.classList.add('shake');
+    setTimeout(() => {
+      inp.classList.remove('wrong');
+      ac.classList.remove('shake');
+    }, 450);
+
+    if (attempts >= 3) {
+      // Out of attempts — reveal answer, no points
+      qCount++;
+      document.getElementById('att-label').textContent = 'No attempts left!';
+      inp.disabled = true;
+      document.getElementById('btnSubmit').disabled = true;
+      showReveal();
+      showNextBtn();
+      enterMode = 'next';
+    } else {
+      // Show remaining + hint
+      const rem = 3 - attempts;
+      document.getElementById('att-label').textContent =
+        `${rem} attempt${rem!==1?'s':''} left`;
+
+      // Show hint (always shown after 1st or 2nd wrong answer)
+      const hb = document.getElementById('hintBox');
+      hb.innerHTML = getHint(curQ, wrongCount);
+      hb.classList.add('show');
+    }
+  }
+}
+
+/** Populate and show the answer-reveal panel + isometric diagram */
+function showReveal() {
+  // Main answer display
+  document.getElementById('revAns').innerHTML =
+    sciHTML(curQ.siValue) + ' ' + curQ.unit;
+
+  // Step-by-step working
+  const c  = curQ.coeff, p = curQ.prefix, pw = curQ.power;
+  const eSign  = p.exp < 0 ? '−' : '';
+  const eAbs   = Math.abs(p.exp);
+  const erSign = curQ.expRes < 0 ? '−' : '';
+  const erAbs  = Math.abs(curQ.expRes);
+  const cr     = curQ.coeffRes;   // c^pw
+
+  document.getElementById('revSteps').innerHTML = `
+    <b>${c} ${p.sym}m</b> = ${c} × 10<sup>${eSign}${eAbs}</sup> m<br>
+    (${c} × 10<sup>${eSign}${eAbs}</sup>)<sup>${pw}</sup>
+      = ${c}<sup>${pw}</sup> × (10<sup>${eSign}${eAbs}</sup>)<sup>${pw}</sup><br>
+    = ${cr} × 10<sup>${erSign}${erAbs}</sup>
+    = ${sciHTML(curQ.siValue)} ${curQ.unit}
+  `;
+
+  // Isometric diagram
+  drawIso(document.getElementById('isoC'), curQ);
+
+  document.getElementById('revealPanel').classList.add('show');
+}
+
+/** Show the Next Question button */
+function showNextBtn() {
+  document.getElementById('btnNext').classList.add('show');
+}
+
+// ============================================================
+//  END GAME
+// ============================================================
+
+function endGame() {
+  active = false;
+  clearInterval(timerID);
+
+  const acc = qCount > 0 ? Math.round(qCorrect / qCount * 100) : 0;
+  document.getElementById('endScore').textContent = score;
+  document.getElementById('stQ').textContent  = qCount;
+  document.getElementById('stC').textContent  = qCorrect;
+  document.getElementById('stA').textContent  = acc + '%';
+  document.getElementById('stP').textContent  = bestPts;
+
+  // Motivational message based on score
+  let msg;
+  if      (score === 0)  msg = '🌱 Keep practising — you\'ll get there!';
+  else if (score < 8)    msg = '🙂 Good start! Try again to beat your score.';
+  else if (score < 18)   msg = '⭐ Nice work! You\'re getting the hang of it!';
+  else if (score < 30)   msg = '🌟 Impressive! You know your prefixes!';
+  else if (score < 45)   msg = '🚀 Outstanding! You\'re a physics superstar!';
+  else                   msg = '🏆 LEGENDARY! Absolutely flawless!';
+  document.getElementById('endMsg').textContent = msg;
+
+  showScreen('scr-end');
+}
+
+// ============================================================
+//  KEYBOARD HANDLING
+// ============================================================
+
+/**
+ * Enter key in the answer box:
+ *   - If enterMode === 'submit' → submit the answer
+ *   - If enterMode === 'next'   → advance to next question
+ */
+document.getElementById('ansInput').addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  e.preventDefault();
+  if (enterMode === 'next') {
+    nextQuestion();
+  } else {
+    submitAnswer();
+  }
+});
+
+</script>
+</body>
+</html>
