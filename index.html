@@ -573,7 +573,8 @@ function generateQuestion() {
 
   // correctAnswer in SI (m² or m³):
   //   (c × 10^p.exp)^pw  =  c^pw × 10^(p.exp * pw)
-  const coeffResult = Math.pow(c, pw);       // e.g. 3²=9
+  const coeffResult = Math.pow(c, 1);       // e.g. 3²=9
+  // CHANGED FROM: const coeffResult = Math.pow(c, pw);       // e.g. 3²=9
   const expResult   = p.exp * pw;            // e.g. −2×2=−4
   const siValue     = coeffResult * Math.pow(10, expResult); // e.g. 9e-4
 
