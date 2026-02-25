@@ -339,7 +339,7 @@ canvas#isoC { border-radius:10px; background:rgba(255,255,255,.04); }
     <div class="intro-col">
       <div class="glass rules-card">
         <h2>📋 How to Play</h2>
-        <div class="rule"><span class="rule-icon">📐</span><span>You'll be given a length with a SI prefix. Square or cube it — giving your answer in m² or m³.</span></div>
+        <div class="rule"><span class="rule-icon">📐</span><span>You'll be given an area or volume with a SI prefix. Convert it to m² or m³.</span></div>
         <div class="rule"><span class="rule-icon">⏱️</span><span>5 minutes on the clock. Answer as many as you can!</span></div>
         <div class="rule"><span class="rule-icon">🎯</span><span>3 attempts per question — <b>3 pts</b> first try, <b>2 pts</b> second, <b>1 pt</b> third.</span></div>
         <div class="rule"><span class="rule-icon">💡</span><span>Hints appear after each wrong answer to help you.</span></div>
@@ -348,11 +348,11 @@ canvas#isoC { border-radius:10px; background:rgba(255,255,255,.04); }
       </div>
       <div class="glass example-card">
         <h3>✨ Worked Example</h3>
-        <div class="ex-formula">(2 cm)² = ?</div>
+        <div class="ex-formula">2 cm² = ?</div>
         <div class="ex-steps">
-          Step 1: 2 cm = 2 × 10<sup>−2</sup> m<br>
-          Step 2: (2 × 10<sup>−2</sup>)<sup>2</sup> = 2<sup>2</sup> × (10<sup>−2</sup>)<sup>2</sup><br>
-          Step 3: = 4 × 10<sup>−4</sup> m² ✓
+          Step 1: 1 cm = 10<sup>−2</sup> m<br>
+          Step 2: 1 cm² = (10<sup>−2</sup> m)² = 10<sup>−4</sup> m²<br>
+          Step 3: 2 cm² = 2 × 10<sup>−4</sup> m² ✓
         </div>
       </div>
     </div>
@@ -375,8 +375,8 @@ canvas#isoC { border-radius:10px; background:rgba(255,255,255,.04); }
           <tr><td>tera</td> <td>T</td><td>× 10<sup>12</sup></td></tr>
         </table>
         <div style="margin-top:8px; font-size:.75rem; color:rgba(255,255,255,.45); line-height:1.4;">
-          ⚠️ Remember: the prefix gets raised to the power too!<br>
-          (3 mm)² ≠ 9 mm² — you must convert to metres first.
+          ⚠️ Remember: when converting units, raise the prefix to the power!<br>
+          1 mm² = (10<sup>−3</sup> m)² = 10<sup>−6</sup> m²
         </div>
       </div>
     </div>
@@ -460,10 +460,10 @@ canvas#isoC { border-radius:10px; background:rgba(255,255,255,.04); }
     <div class="stat"><div class="stat-val" id="stP">0</div><div class="stat-lbl">Best pts/Q</div></div>
   </div>
   <div class="glass insight-card">
-    <b style="color:var(--yellow);">📚 Key Insight:</b> When raising a prefixed length to a power,
-    <em>both</em> the number <em>and</em> the prefix exponent are raised:<br>
-    <span style="color:var(--teal);">a × (10<sup>n</sup>)<sup>p</sup> = a × 10<sup>np</sup></span><br>
-    e.g. 3 cm² = 3 (cm)² = 3 × (10<sup>−2</sup>)<sup>2</sup> = 3 × 10<sup>−4</sup> m²
+    <b style="color:var(--yellow);">📚 Key Insight:</b> When converting area/volume units with prefixes,
+    the <em>prefix exponent</em> gets raised to the power:<br>
+    <span style="color:var(--teal);">1 km² = (10³ m)² = 10⁶ m² &nbsp;→&nbsp; 5 km² = 5 × 10⁶ m²</span><br>
+    The numerical value stays the same, only the unit converts!
   </div>
   <button class="btn-again" onclick="restartGame()">🔄 Play Again!</button>
 </div>
@@ -561,10 +561,9 @@ let enterMode    = 'submit'; // 'submit' | 'next'
 
 /**
  * Builds a question object.
- * Physics: (coeff × 10^exp)^power = coeff^power × 10^(exp*power) m^power
- *
- * All arithmetic is done via exact integer exponents to avoid
- * floating-point drift.  The true SI answer (m² or m³) is stored.
+ * Physics: c × (prefix_unit)^power = c × 10^(exp*power) m^power
+ * 
+ * The coefficient stays the same, only the unit conversion happens.
  */
 function generateQuestion() {
   const p  = PREFIXES[Math.floor(Math.random() * PREFIXES.length)];
@@ -572,18 +571,17 @@ function generateQuestion() {
   const pw = POWERS[Math.floor(Math.random() * POWERS.length)];
 
   // correctAnswer in SI (m² or m³):
-  //   (c × 10^p.exp)^pw  =  c^pw × 10^(p.exp * pw)
-  const coeffResult = Math.pow(c, 1);       // e.g. 3²=9
-  // CHANGED FROM: const coeffResult = Math.pow(c, pw);       // e.g. 3²=9
+  //   c × (prefix_unit)^pw  =  c × 10^(p.exp * pw)
+  const coeffResult = c;  // coefficient stays the same
   const expResult   = p.exp * pw;            // e.g. −2×2=−4
-  const siValue     = coeffResult * Math.pow(10, expResult); // e.g. 9e-4
+  const siValue     = coeffResult * Math.pow(10, expResult); // e.g. 2×10^-4
 
   return {
     coeff:      c,
     prefix:     p,
     power:      pw,
     siValue:    siValue,      // exact SI answer
-    coeffRes:   coeffResult,  // c^pw (integer or nice number)
+    coeffRes:   coeffResult,  // c (unchanged)
     expRes:     expResult,    // exact exponent in SI result
     unit:       pw === 2 ? 'm²' : 'm³'
   };
@@ -640,7 +638,7 @@ function sciText(n) {
 }
 
 /**
- * Formats the question as HTML: e.g. "(3 cm)<sup>2</sup>"
+ * Formats the question as HTML: e.g. "3 cm<sup>2</sup>"
  */
 function qHTML(q) {
   const sup = q.power === 2 ? '2' : '3';
@@ -723,27 +721,25 @@ function getHint(q, wrongCount) {
   const e  = p.exp;   // e.g. −2 for centi
 
   if (wrongCount === 1) {
-    // Hint 1: remind them to convert and expand the power
-    const pwWord  = pw === 2 ? 'square' : 'cube';
-    const pwSym   = pw === 2 ? '²'      : '³';
+    // Hint 1: remind them about unit conversion
+    const unitWord = pw === 2 ? 'area' : 'volume';
     const eSign   = e < 0 ? '−' : '';
     const eAbs    = Math.abs(e);
-    return `💡 <b>Hint 1:</b> Convert first: ${c} ${p.sym}m = ${c} × 10<sup>${eSign}${eAbs}</sup> m.
-      Then ${pwWord} <em>each part separately</em>:
-      (${c} × 10<sup>${eSign}${eAbs}</sup>)<sup>${pw}</sup> = ${c}<sup>${pw}</sup> × (10<sup>${eSign}${eAbs}</sup>)<sup>${pw}</sup>.`;
+    return `💡 <b>Hint 1:</b> When converting ${unitWord} units, raise the prefix to the power.
+      1 ${p.sym}m = 10<sup>${eSign}${eAbs}</sup> m, so
+      1 ${p.sym}m<sup>${pw}</sup> = (10<sup>${eSign}${eAbs}</sup>)<sup>${pw}</sup> m<sup>${pw}</sup>.
+      Then multiply by ${c}.`;
   }
 
   if (wrongCount >= 2) {
-    // Hint 2: show the actual numbers
+    // Hint 2: show the actual calculation
     const eSign   = e < 0 ? '−' : '';
     const eAbs    = Math.abs(e);
-    const cRes    = q.coeffRes;      // c^pw (integer)
-    const expRes  = q.expRes;        // e * pw (integer exponent)
+    const expRes  = q.expRes;
     const expSign = expRes < 0 ? '−' : '';
     const expAbs  = Math.abs(expRes);
-    return `💡 <b>Hint 2:</b> ${c}<sup>${pw}</sup> = ${cRes} &nbsp;and&nbsp;
-      (10<sup>${eSign}${eAbs}</sup>)<sup>${pw}</sup> = 10<sup>${expSign}${expAbs}</sup>.
-      So the answer is ${cRes} × 10<sup>${expSign}${expAbs}</sup> ${q.unit}
+    return `💡 <b>Hint 2:</b> (10<sup>${eSign}${eAbs}</sup>)<sup>${pw}</sup> = 10<sup>${expSign}${expAbs}</sup>.
+      So ${c} ${p.sym}m<sup>${pw}</sup> = ${c} × 10<sup>${expSign}${expAbs}</sup> ${q.unit}
       = ${sciHTML(q.siValue)} ${q.unit}.`;
   }
   return '';
@@ -754,45 +750,46 @@ function getHint(q, wrongCount) {
 // ============================================================
 
 /**
- * Draws an isometric square (for power=2) or cube (for power=3) on
- * the given canvas.  Labels each visible edge with the original
- * length so students can see why the prefix is raised to the power.
+ * Draws a rectangle (for power=2) or cuboid (for power=3) on
+ * the given canvas. Labels dimensions to show the unit conversion.
  *
  * Colour palette:
- *   square → teal (#4ecdc4)
- *   cube   → purple (#c084fc) with three face shades
+ *   rectangle → teal (#4ecdc4)
+ *   cuboid → purple (#c084fc) with three face shades
  */
 function drawIso(canvas, q) {
   const ctx  = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
   ctx.clearRect(0, 0, W, H);
 
-  const label = `${q.coeff}${q.prefix.sym}m`;   // e.g. "3cm"
+  const label = `${q.prefix.sym}m`;   // e.g. "cm"
   ctx.textBaseline = 'middle';
   ctx.font = 'bold 9px Trebuchet MS,sans-serif';
 
   if (q.power === 2) {
-    // ── ISOMETRIC SQUARE (top-face rhombus) ──────────────────
-    // Centre of rhombus
-    const cx = W / 2, cy = H / 2 + 6;
-    const ax = 52, ay = 22;   // half-axes of the rhombus
+    // ── RECTANGLE (showing area) ──────────────────
+    const cx = W / 2, cy = H / 2;
+    const rw = 70, rh = 45; // rectangle dimensions
 
+    // Draw rectangle slightly tilted for isometric feel
+    const tilt = 0.3; // slight tilt
+    
     // Four corners
-    const top  = { x: cx,      y: cy - ay*2 };
-    const rgt  = { x: cx + ax, y: cy };
-    const bot  = { x: cx,      y: cy + ay*2 };
-    const lft  = { x: cx - ax, y: cy };
+    const tl = { x: cx - rw/2, y: cy - rh/2 };
+    const tr = { x: cx + rw/2, y: cy - rh/2 - rw * tilt };
+    const br = { x: cx + rw/2, y: cy + rh/2 - rw * tilt };
+    const bl = { x: cx - rw/2, y: cy + rh/2 };
 
     // Gradient fill
-    const grad = ctx.createLinearGradient(lft.x, cy, rgt.x, cy);
+    const grad = ctx.createLinearGradient(tl.x, cy, tr.x, cy);
     grad.addColorStop(0, 'rgba(78,205,196,0.55)');
     grad.addColorStop(1, 'rgba(78,205,196,0.20)');
 
     ctx.beginPath();
-    ctx.moveTo(top.x, top.y);
-    ctx.lineTo(rgt.x, rgt.y);
-    ctx.lineTo(bot.x, bot.y);
-    ctx.lineTo(lft.x, lft.y);
+    ctx.moveTo(tl.x, tl.y);
+    ctx.lineTo(tr.x, tr.y);
+    ctx.lineTo(br.x, br.y);
+    ctx.lineTo(bl.x, bl.y);
     ctx.closePath();
     ctx.fillStyle = grad;
     ctx.fill();
@@ -800,11 +797,11 @@ function drawIso(canvas, q) {
     ctx.lineWidth = 1.8;
     ctx.stroke();
 
-    // Edge labels (top-left and top-right edges)
+    // Edge labels (width and height)
     ctx.fillStyle = '#ffe66d';
     ctx.textAlign = 'center';
-    ctx.fillText(label, (top.x + lft.x)/2 - 16, (top.y + lft.y)/2 - 3);
-    ctx.fillText(label, (top.x + rgt.x)/2 + 16, (top.y + rgt.y)/2 - 3);
+    ctx.fillText(label, (tl.x + tr.x)/2, tl.y - 8);  // top edge
+    ctx.fillText(label, tr.x + 12, (tr.y + br.y)/2);  // right edge
 
     // Area value in the centre
     ctx.fillStyle = 'rgba(255,255,255,0.75)';
@@ -812,22 +809,19 @@ function drawIso(canvas, q) {
     ctx.fillText(sciText(q.siValue) + ' m²', cx, cy + 2);
 
   } else {
-    // ── ISOMETRIC CUBE ────────────────────────────────────────
-    // Isometric unit vectors (pixel lengths):
-    //   right-forward:  (+sx, +sh)
-    //   left-forward:   (-sx, +sh)
-    //   up:             ( 0, -sv)
+    // ── CUBOID (showing volume) ────────────────────────────────
+    // Isometric projection
     const cx = W/2, cy = H/2 + 4;
-    const sx = 42, sh = 24, sv = 48;
+    const sx = 40, sh = 22, sv = 46;
 
-    // 8 corners of the cube — only 7 visible
-    const TOP    = { x: cx,      y: cy - sv };            // apex
-    const TRL    = { x: cx + sx, y: cy - sv + sh };       // top-right-left
-    const TLR    = { x: cx - sx, y: cy - sv + sh };       // top-left-right
-    const MID    = { x: cx,      y: cy };                  // shared middle corner
-    const BRL    = { x: cx + sx, y: cy + sh };             // bottom-right
-    const BLL    = { x: cx - sx, y: cy + sh };             // bottom-left
-    const BOT    = { x: cx,      y: cy + 2*sh };           // bottom-centre
+    // 7 visible corners
+    const TOP    = { x: cx,      y: cy - sv };
+    const TRL    = { x: cx + sx, y: cy - sv + sh };
+    const TLR    = { x: cx - sx, y: cy - sv + sh };
+    const MID    = { x: cx,      y: cy };
+    const BRL    = { x: cx + sx, y: cy + sh };
+    const BLL    = { x: cx - sx, y: cy + sh };
+    const BOT    = { x: cx,      y: cy + 2*sh };
 
     // Helper: filled polygon
     function poly(pts, fill, stroke) {
@@ -842,25 +836,20 @@ function drawIso(canvas, q) {
       ctx.stroke();
     }
 
-    // Top face (lightest)
+    // Three visible faces
     poly([TOP, TRL, MID, TLR], 'rgba(192,132,252,0.70)', 'rgba(192,132,252,1)');
-    // Right face (medium)
     poly([TRL, BRL, BOT, MID], 'rgba(192,132,252,0.40)', 'rgba(192,132,252,1)');
-    // Left face (darkest)
     poly([TLR, MID, BOT, BLL], 'rgba(192,132,252,0.22)', 'rgba(192,132,252,1)');
 
-    // Edge labels on each visible face edge
+    // Edge labels (one per dimension)
     ctx.fillStyle = '#ffe66d';
     ctx.font      = 'bold 8.5px Trebuchet MS,sans-serif';
     ctx.textAlign = 'center';
-    // Top face: front-right edge
-    ctx.fillText(label, (TOP.x + TRL.x)/2 + 12, (TOP.y + TRL.y)/2 - 5);
-    // Right face: top-right vertical edge
-    ctx.fillText(label, TRL.x + 14, (TRL.y + BRL.y)/2);
-    // Left face: bottom edge
-    ctx.fillText(label, (BLL.x + BOT.x)/2, BOT.y + 10);
+    ctx.fillText(label, (TOP.x + TRL.x)/2 + 10, (TOP.y + TRL.y)/2 - 4); // width
+    ctx.fillText(label, TRL.x + 12, (TRL.y + BRL.y)/2); // height
+    ctx.fillText(label, (BLL.x + BOT.x)/2, BOT.y + 10); // depth
 
-    // Volume label in lower-right area
+    // Volume label
     ctx.fillStyle = 'rgba(255,255,255,0.75)';
     ctx.font      = 'bold 7.5px Trebuchet MS,sans-serif';
     ctx.fillText(sciText(q.siValue) + ' m³', cx + sx*0.6, cy + sh*1.5);
@@ -1059,13 +1048,12 @@ function showReveal() {
   const eAbs   = Math.abs(p.exp);
   const erSign = curQ.expRes < 0 ? '−' : '';
   const erAbs  = Math.abs(curQ.expRes);
-  const cr     = curQ.coeffRes;   // c^pw
 
   document.getElementById('revSteps').innerHTML = `
-    <b>${c} ${p.sym}m</b> = ${c} × 10<sup>${eSign}${eAbs}</sup> m<br>
-    (${c} × 10<sup>${eSign}${eAbs}</sup>)<sup>${pw}</sup>
-      = ${c}<sup>${pw}</sup> × (10<sup>${eSign}${eAbs}</sup>)<sup>${pw}</sup><br>
-    = ${cr} × 10<sup>${erSign}${erAbs}</sup>
+    <b>1 ${p.sym}m</b> = 10<sup>${eSign}${eAbs}</sup> m<br>
+    1 ${p.sym}m<sup>${pw}</sup> = (10<sup>${eSign}${eAbs}</sup>)<sup>${pw}</sup> m<sup>${pw}</sup>
+      = 10<sup>${erSign}${erAbs}</sup> m<sup>${pw}</sup><br>
+    ${c} ${p.sym}m<sup>${pw}</sup> = ${c} × 10<sup>${erSign}${erAbs}</sup>
     = ${sciHTML(curQ.siValue)} ${curQ.unit}
   `;
 
